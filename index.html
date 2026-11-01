@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lixeira Inteligente — Monitoramento automático de resíduos com Arduino</title>
+  <meta name="description" content="Projeto universitário de lixeira inteligente com Arduino e sensor ultrassônico HC-SR04, que monitora o nível de resíduos e sinaliza com LEDs. Simulador interativo e assistente virtual.">
+  <meta name="theme-color" content="#f8fafc">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/sections.css">
+  <link rel="stylesheet" href="css/chatbot.css">
+  <link rel="stylesheet" href="css/theme-light.css">
+  <script>
+    
+    try { if (localStorage.getItem("theme") !== "dark") document.documentElement.setAttribute("data-theme", "light"); } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+  </script>
+</head>
+<body>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0" aria-hidden="true">
+    <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#30B155"/><stop offset=".5" stop-color="#79CE67"/><stop offset="1" stop-color="#C2DD6C"/></linearGradient></defs>
+    <symbol id="logo" viewBox="0 0 32 32" stroke="none"><path d="M8 11h16l-1.5 14a2 2 0 0 1-2 1.8h-9a2 2 0 0 1-2-1.8z" fill="url(#lg)"/><rect x="6" y="7" width="20" height="3.5" rx="1.7" fill="#FFE3B3"/><rect x="13" y="4.5" width="6" height="2.5" rx="1.2" fill="#FFE3B3"/></symbol>
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <symbol id="arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+      <symbol id="arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+      <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+      <symbol id="sonar" viewBox="0 0 24 24"><circle cx="12" cy="18" r="2"/><path d="M7.5 13.5a6.4 6.4 0 0 1 9 0M4.5 10.5a10.6 10.6 0 0 1 15 0M2 7.5a14 14 0 0 1 20 0"/></symbol>
+      <symbol id="chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+      <symbol id="led" viewBox="0 0 24 24"><path d="M8 15V9a4 4 0 0 1 8 0v6zM6 15h12M10 15v6M14 15v4M12 1v1M4.5 4.5l.8.8M19.5 4.5l-.8.8"/></symbol>
+      <symbol id="truck" viewBox="0 0 24 24"><path d="M2 6h12v10H2zM14 9h4l4 4v3h-8z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+      <symbol id="gauge" viewBox="0 0 24 24"><path d="M3.5 18a9.5 9.5 0 1 1 17 0"/><path d="M12 14l4-5"/><circle cx="12" cy="15" r="1"/></symbol>
+      <symbol id="alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol>
+      <symbol id="route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
+      <symbol id="city" viewBox="0 0 24 24"><path d="M3 21V9l6-3v15M9 21V4l8 3v14M17 21v-8l4 1.5V21M2 21h20M12 9h2M12 13h2M12 17h2"/></symbol>
+      <symbol id="bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9.5 16.2c1.5 1 3.5 1 5 0"/><circle cx="12" cy="3.5" r="1"/></symbol>
+      <symbol id="send" viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+      <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.800 8 7"/></symbol>
+      <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    </g>
+  </svg>
+
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="orb orb-4"></span>
+  </div>
+
+  <header class="site-header" id="header">
+    <nav class="nav container" aria-label="Navegação principal">
+      <a href="#inicio" class="brand" aria-label="Lixeira Inteligente — início">
+        <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><use href="#logo"/></svg>
+        <span>Smart <b>Coletor</b></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#inicio">Início</a></li>
+        <li><a href="#quem-somos">Quem somos</a></li>
+        <li><a href="#monitoramento">Simulador</a></li>
+        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#grupo">Integrantes</a></li>
+        <li><a href="#contato">Contato</a></li>
+        <li><a href="#assistente" class="nav-cta">Assistente</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ativar modo claro" aria-pressed="false" title="Alternar tema">
+        <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="#moon"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="#sun"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow load-in" style="--d:0ms"><span class="dot"></span> Projeto Integrador · Automação e Tecnologia</p>
+          <h1 class="load-in" style="--d:120ms">Lixeira <span class="grad-text">Inteligente</span></h1>
+          <p class="hero-lead load-in" style="--d:240ms">Uma ideia simples para tornar o descarte de resíduos mais eficiente.</p>
+          <p class="hero-text load-in" style="--d:340ms">Desenvolvemos um protótipo de lixeira inteligente capaz de identificar o nível de resíduos em seu interior. Utilizando um sensor ultrassônico, Arduino e LEDs, nosso projeto mostra como a tecnologia pode ajudar a perceber quando uma lixeira está ficando cheia.</p>
+          <div class="hero-actions load-in" style="--d:460ms">
+            <a href="#monitoramento" class="btn btn-primary" id="btnExplorar">Conheça o projeto
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><use href="#arrow-down"/></svg></a>
+            <a href="#como-funciona" class="btn btn-ghost" id="btnComoFunciona">Veja como funciona</a>
+          </div>
+          <ul class="hero-stats load-in" style="--d:580ms">
+            <li><span>Sensor ultrassônico HC-SR04</span></li>
+            <li><span>Controle com Arduino</span></li>
+            <li><span>4 LEDs indicadores</span></li>
+          </ul>
+        </div>
+
+        <div class="hero-visual load-in" style="--d:300ms">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <svg class="hero-bin" viewBox="0 0 360 460" role="img" aria-label="Ilustração da lixeira inteligente com sensor ultrassônico e quatro LEDs indicadores">
+            <defs>
+              <linearGradient id="hBody" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#1b2a23"/><stop offset=".5" stop-color="#26382f"/><stop offset="1" stop-color="#16221c"/>
+              </linearGradient>
+              <linearGradient id="hLid" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#34493e"/><stop offset="1" stop-color="#1f2f27"/>
+              </linearGradient>
+              <linearGradient id="hFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#C2DD6C"/><stop offset=".5" stop-color="#79CE67"/><stop offset="1" stop-color="#30B155"/>
+              </linearGradient>
+              <clipPath id="hClip"><path d="M70 150 L290 150 L270 420 Q268 432 256 432 L104 432 Q92 432 90 420 Z"/></clipPath>
+              <filter id="blur"><feGaussianBlur stdDeviation="6"/></filter>
+            </defs>
+            <ellipse cx="180" cy="444" rx="120" ry="10" fill="#000" opacity=".4" filter="url(#blur)"/>
+            
+            <path d="M70 150 L290 150 L270 420 Q268 432 256 432 L104 432 Q92 432 90 420 Z" fill="url(#hBody)" stroke="#3a5246" stroke-width="1.5"/>
+            <g clip-path="url(#hClip)">
+              
+              <g class="drops">
+                <rect class="drop d1" x="130" y="156" width="22" height="22" rx="5" fill="#FFE3B3"/>
+                <circle class="drop d2" cx="188" cy="170" r="11" fill="#C2DD6C"/>
+                <rect class="drop d3" x="222" y="156" width="18" height="26" rx="4" fill="#ffffff" opacity=".85"/>
+              </g>
+              
+              <line class="hero-beam" x1="180" y1="150" x2="180" y2="440" stroke="#C2DD6C" stroke-width="2.5" stroke-dasharray="3 8" stroke-linecap="round"/>
+              
+              <g class="hero-fill">
+                <g class="hero-wave">
+                  <path d="M-120 190 q30 -16 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 V480 H-120Z" fill="currentColor" opacity=".92"/>
+                </g>
+                <g class="hero-wave hero-wave-b">
+                  <path d="M-120 196 q30 14 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0 V480 H-120Z" fill="#fff" opacity=".18"/>
+                </g>
+              </g>
+            </g>
+            <path d="M70 150 L290 150 L270 420" fill="none" stroke="#fff" stroke-opacity=".08"/>
+            
+            <g transform="translate(180 330)" opacity=".85" fill="none" stroke="#FFE3B3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M-14 8 L-24 -8 L-12 -8"/><path d="M-6 -22 L8 -22 L16 -8"/><path d="M20 4 L10 18 L-6 18"/>
+            </g>
+            
+            <rect x="52" y="112" width="256" height="42" rx="14" fill="url(#hLid)" stroke="#3a5246" stroke-width="1.5"/>
+            <rect x="150" y="96" width="60" height="16" rx="8" fill="#2c4036" stroke="#3a5246"/>
+            
+            <g>
+              <rect x="108" y="118" width="144" height="30" rx="8" fill="#0f1b15" stroke="#4a6b59"/>
+              <circle cx="145" cy="133" r="11" fill="#0a120e" stroke="#9db3a6" stroke-width="2"/>
+              <circle cx="145" cy="133" r="6" fill="#16241d" stroke="#5c7a69"/>
+              <circle cx="215" cy="133" r="11" fill="#0a120e" stroke="#9db3a6" stroke-width="2"/>
+              <circle cx="215" cy="133" r="6" fill="#16241d" stroke="#5c7a69"/>
+              <rect x="170" y="128" width="20" height="10" rx="2" fill="#30B155" opacity=".7"/>
+            </g>
+            
+            <g fill="none" stroke="#79CE67" stroke-width="3.5" stroke-linecap="round" class="waves">
+              <path d="M130 166 Q180 188 230 166"/><path d="M116 194 Q180 228 244 194"/><path d="M102 224 Q180 268 258 224"/>
+            </g>
+            
+            <g>
+              <rect class="led-box" x="108" y="62" width="144" height="28" rx="14" fill="none" stroke="#3a5246"/>
+              <circle class="led-l l1" cx="128" cy="76" r="9" fill="#2EB85C"/>
+              <circle class="led-l l2" cx="164" cy="76" r="9" fill="#FFD60A"/>
+              <circle class="led-l l3" cx="200" cy="76" r="9" fill="#FF9500"/>
+              <circle class="led-l l4" cx="236" cy="76" r="9" fill="#E5383B"/>
+              
+            </g>
+          </svg>
+          <div class="float-chip chip-a"><span class="chip-dot"></span> Distância medida</div>
+          <div class="float-chip chip-b"><span class="chip-dot c2"></span> Nível estimado</div>
+        </div>
+      </div>
+      <a href="#quem-somos" class="scroll-hint" aria-label="Rolar para quem somos"><span></span></a>
+    </section>
+
+    <section class="section" id="quem-somos">
+      <div class="container">
+        <div class="company-showcase reveal">
+          <div class="company-visual">
+            <div class="company-img-wrap">
+              <video id="companyVideo" class="company-video" autoplay muted loop playsinline poster="assets/empresa.png" title="Vídeo institucional Smart Coletor HQ">
+                <source src="assets/video-empresa.mp4" type="video/mp4">
+                Seu navegador não suporta a reprodução de vídeo.
+              </video>
+            </div>
+          </div>
+          <div class="company-content">
+            <header class="section-head text-left">
+              <p class="eyebrow"><span class="dot"></span> Quem somos</p>
+              <h2>Conheça a <span class="grad-text">Smart Coletor</span></h2>
+            </header>
+            <p class="company-lead">
+              Transformamos a gestão diária de resíduos através de sensoriamento IoT inteligente, automação acessível e sustentabilidade em tempo real.
+            </p>
+            <div class="company-pillars">
+              <div class="pillar-card pillar-iot">
+                <div class="pillar-icon">
+                  <svg class="icon-svg icon-sonar" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <circle class="sonar-dot" cx="12" cy="18" r="2"/>
+                    <path class="sonar-arc arc-1" d="M7.5 13.5a6.4 6.4 0 0 1 9 0"/>
+                    <path class="sonar-arc arc-2" d="M4.5 10.5a10.6 10.6 0 0 1 15 0"/>
+                    <path class="sonar-arc arc-3" d="M2 7.5a14 14 0 0 1 20 0"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>Tecnologia IoT</h4>
+                  <p>Sensoriamento ultrassônico com monitoramento contínuo.</p>
+                </div>
+              </div>
+              <div class="pillar-card pillar-chip">
+                <div class="pillar-icon">
+                  <svg class="icon-svg icon-chip" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <rect class="chip-body" x="6" y="6" width="12" height="12" rx="2"/>
+                    <rect class="chip-core" x="9.5" y="9.5" width="5" height="5" rx="1"/>
+                    <path class="chip-pins" d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>Automação Acessível</h4>
+                  <p>Hardware prático, confiável e adaptável a qualquer ambiente.</p>
+                </div>
+              </div>
+              <div class="pillar-card pillar-city">
+                <div class="pillar-icon">
+                  <svg class="icon-svg icon-city" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path class="city-skyline" d="M3 21V9l6-3v15M9 21V4l8 3v14M17 21v-8l4 1.5V21M2 21h20"/>
+                    <path class="city-window win-1" d="M12 9h2"/>
+                    <path class="city-window win-2" d="M12 13h2"/>
+                    <path class="city-window win-3" d="M12 17h2"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>Impacto Sustentável</h4>
+                  <p>Rotinas otimizadas, descarte consciente e menos deslocamentos.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="company-trajectory reveal">
+          <div class="trajectory-head">
+            <span class="trajectory-tag"><span class="badge-dot"></span> Nossa Trajetória</span>
+            <p>Da constatação do problema à concepção da lixeira inteligente</p>
+          </div>
+
+          <div class="trajectory-steps">
+            <div class="traj-card">
+              <div class="traj-top">
+                <span class="traj-num">01</span>
+                <span class="traj-tag">Diagnóstico</span>
+              </div>
+              <h4>O Problema</h4>
+              <p>A checagem manual consome tempo da equipe e gera viagens desnecessárias até lixeiras vazias.</p>
+            </div>
+
+            <div class="traj-card">
+              <div class="traj-top">
+                <span class="traj-num">02</span>
+                <span class="traj-tag">Concepção</span>
+              </div>
+              <h4>Ideia Inteligente</h4>
+              <p>Sensoriamento automático para alertar com precisão o momento ideal da coleta.</p>
+            </div>
+
+            <div class="traj-card">
+              <div class="traj-top">
+                <span class="traj-num">03</span>
+                <span class="traj-tag">Engenharia</span>
+              </div>
+              <h4>Integração IoT</h4>
+              <p>Combinação do sensor ultrassônico HC-SR04, microcontrolador Arduino e LEDs.</p>
+            </div>
+
+            <div class="traj-card">
+              <div class="traj-top">
+                <span class="traj-num">04</span>
+                <span class="traj-tag">Expansão</span>
+              </div>
+              <h4>Validação Prática</h4>
+              <p>Testes de confiabilidade e preparação para escolas, condomínios e empresas.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="monitoramento">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Simulador</p>
+          <h2>Veja como a lixeira <span class="grad-text">funciona</span></h2>
+          <p>Aqui você pode simular o enchimento da lixeira e acompanhar como o sistema identifica cada nível. Altere a porcentagem e veja como a distância estimada, o status e os indicadores mudam.</p>
+        </header>
+
+        <div class="sim reveal">
+          <div class="sim-stage glass">
+            <div class="sim-stage-content">
+              
+              <div class="phone-mockup" id="phoneMockup" role="region" aria-label="Smartphone de monitoramento em tempo real">
+                <div class="phone-screen" id="phoneScreen">
+                  
+                  <div class="phone-notch">
+                    <div class="notch-speaker"></div>
+                    <div class="notch-camera"></div>
+                  </div>
+
+                  <div class="phone-status-bar">
+                    <span class="phone-time" id="phoneStatusTime">11:55</span>
+                    <div class="phone-status-icons">
+                      <svg class="phone-icon icon-signal" viewBox="0 0 16 12">
+                        <rect x="1" y="8" width="2" height="4" rx="0.5" fill="#fff"/>
+                        <rect x="5" y="6" width="2" height="6" rx="0.5" fill="#fff"/>
+                        <rect x="9" y="3.5" width="2" height="8.5" rx="0.5" fill="#fff"/>
+                        <rect x="13" y="1" width="2" height="11" rx="0.5" fill="#fff"/>
+                      </svg>
+                      <span class="phone-5g">5G</span>
+                      <svg class="phone-icon icon-battery" viewBox="0 0 24 12">
+                        <rect x="1" y="1" width="19" height="10" rx="3" fill="none" stroke="#fff" stroke-width="1.2"/>
+                        <rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="#2EB85C"/>
+                        <path d="M21 4.5 Q22 4.5 22 5.5 L22 6.5 Q22 7.5 21 7.5 Z" fill="#fff"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div class="phone-lock-header">
+                    <div class="phone-lock-icon">
+                      <svg width="11" height="13" viewBox="0 0 12 14" fill="none" stroke="#fff" stroke-width="1.4">
+                        <rect x="1.5" y="5.5" width="9" height="7" rx="2"/>
+                        <path d="M3.5 5.5 V3.5 A2.5 2.5 0 0 1 8.5 3.5 V5.5"/>
+                      </svg>
+                    </div>
+                    <div class="phone-date" id="phoneLockDate">Sexta-feira, 16 de outubro</div>
+                    <div class="phone-big-clock" id="phoneBigClock">11:55</div>
+                  </div>
+
+                  <div class="phone-notifs-container">
+                    <div class="phone-notifs-list" id="phoneNotifsList">
+                      <div class="phone-idle-hint" id="phoneIdleHint">
+                        <span class="idle-pulse-dot"></span>
+                        <span>Monitoramento IoT Ativo</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="phone-lock-footer">
+                    <div class="phone-shortcut-btn" title="Lanterna" aria-hidden="true">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M18 6 C18 2 6 2 6 6 L8 12 L8 22 L16 22 L16 12 Z"/>
+                        <line x1="12" y1="15" x2="12" y2="17"/>
+                      </svg>
+                    </div>
+                    <div class="phone-home-bar" aria-hidden="true"></div>
+                    <div class="phone-shortcut-btn" title="Câmera" aria-hidden="true">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bin-3d-wrap" id="bin" data-level="0">
+              <svg class="bin-3d-svg" viewBox="0 0 360 520" role="img" aria-label="Lixeira inteligente com sensor ultrassônico na tampa aberta e visor de nível em cápsula">
+                <defs>
+                  <filter id="binShadowBlur"><feGaussianBlur in="SourceGraphic" stdDeviation="7"/></filter>
+                  <linearGradient id="bin3dBody" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#141a16"/>
+                    <stop offset="18%" stop-color="#2a352d"/>
+                    <stop offset="50%" stop-color="#202923"/>
+                    <stop offset="82%" stop-color="#2a352d"/>
+                    <stop offset="100%" stop-color="#131815"/>
+                  </linearGradient>
+                  <linearGradient id="lidExtGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2c362f"/>
+                    <stop offset="60%" stop-color="#1e2520"/>
+                    <stop offset="100%" stop-color="#151b17"/>
+                  </linearGradient>
+                  <linearGradient id="lidIntGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#171d19"/>
+                    <stop offset="100%" stop-color="#0c100e"/>
+                  </linearGradient>
+                  <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#344238"/>
+                    <stop offset="50%" stop-color="#242e27"/>
+                    <stop offset="100%" stop-color="#171e19"/>
+                  </linearGradient>
+                  <linearGradient id="metalTrans" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f8fafc"/>
+                    <stop offset="30%" stop-color="#94a3b8"/>
+                    <stop offset="70%" stop-color="#475569"/>
+                    <stop offset="100%" stop-color="#cbd5e1"/>
+                  </linearGradient>
+                  <linearGradient id="sonarCone" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity=".45"/>
+                    <stop offset="35%" stop-color="#ffffff" stop-opacity=".18"/>
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity=".02"/>
+                  </linearGradient>
+                  <linearGradient id="pillFrame" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+                    <stop offset="50%" stop-color="#cbd5e1" stop-opacity=".75"/>
+                    <stop offset="100%" stop-color="#94a3b8" stop-opacity=".9"/>
+                  </linearGradient>
+                  
+                  <linearGradient id="pillFixedColors" x1="0" y1="444" x2="0" y2="180" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#2EB85C"/>
+                    <stop offset="24%" stop-color="#2EB85C"/>
+                    <stop offset="26%" stop-color="#FFD60A"/>
+                    <stop offset="49%" stop-color="#FFD60A"/>
+                    <stop offset="51%" stop-color="#FF9500"/>
+                    <stop offset="74%" stop-color="#FF9500"/>
+                    <stop offset="76%" stop-color="#E5383B"/>
+                    <stop offset="100%" stop-color="#E5383B"/>
+                  </linearGradient>
+                  <clipPath id="pillClip">
+                    <rect x="206" y="180" width="52" height="264" rx="26" ry="26"/>
+                  </clipPath>
+
+                  <g id="itemPaper">
+                    <path d="M-13 -9 L2 -15 L13 -6 L15 7 L4 14 L-11 11 L-15 0 Z" fill="#f8fafc" stroke="#475569" stroke-width="1.4" stroke-linejoin="round"/>
+                    <polygon points="-13,-9 2,-15 0,0" fill="#cbd5e1" opacity=".85"/>
+                    <polygon points="2,-15 13,-6 0,0" fill="#f1f5f9"/>
+                    <polygon points="13,-6 15,7 0,0" fill="#94a3b8" opacity=".8"/>
+                    <polygon points="15,7 4,14 0,0" fill="#64748b" opacity=".7"/>
+                    <polygon points="4,14 -11,11 0,0" fill="#94a3b8" opacity=".85"/>
+                    <polygon points="-11,11 -15,0 0,0" fill="#cbd5e1"/>
+                    <polygon points="-15,0 -13,-9 0,0" fill="#e2e8f0"/>
+                  </g>
+
+                  <g id="itemCan">
+                    
+                    <rect x="-10" y="-16" width="20" height="32" rx="3.5" fill="#0284c7" stroke="#38bdf8" stroke-width="1.3"/>
+                    <rect x="-5" y="-15" width="3.5" height="30" rx="1.5" fill="#ffffff" opacity=".4"/>
+                    
+                    <path d="M-10 -3 Q0 2 10 -3 L10 5 Q0 10 -10 5 Z" fill="#ffffff" opacity=".9"/>
+                    <text x="0" y="3" fill="#0284c7" font-size="5.5" font-weight="900" text-anchor="middle" font-family="sans-serif">ECO</text>
+                    
+                    <ellipse cx="0" cy="-16" rx="9" ry="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                    <ellipse cx="0" cy="-16" rx="3" ry="1.2" fill="#334155"/>
+                    <ellipse cx="0" cy="16" rx="9" ry="2.8" fill="#64748b" stroke="#334155" stroke-width="0.8"/>
+                  </g>
+
+                  <g id="itemCup">
+                    
+                    <rect x="-12" y="-16" width="24" height="4.5" rx="2" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+                    <rect x="-9" y="-18" width="18" height="2.5" rx="1" fill="#334155"/>
+                    
+                    <path d="M-10 -11.5 L10 -11.5 L7.5 14 L-7.5 14 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+                    
+                    <path d="M-9 -3 L9 -3 L7.8 7 L-7.8 7 Z" fill="#b45309" stroke="#78350f" stroke-width="0.8"/>
+                    <circle cx="0" cy="2" r="2.8" fill="#fef3c7"/>
+                  </g>
+                </defs>
+
+                <ellipse cx="180" cy="492" rx="140" ry="12" fill="#000000" opacity=".45" filter="url(#binShadowBlur)"/>
+
+                <g class="sim-lid-group">
+                  <path d="M52 118 L86 46 Q88 42 94 42 L266 42 Q272 42 274 46 L308 118 Z" fill="url(#lidExtGrad)" stroke="#37473d" stroke-width="1.5"/>
+                  <path d="M64 116 L92 50 Q94 48 98 48 L262 48 Q266 48 268 50 L296 116 Z" fill="url(#lidIntGrad)"/>
+
+                  <g class="sim-sensor-hc">
+                    <rect x="125" y="52" width="110" height="38" rx="4" fill="#1849a9" stroke="#3b82f6" stroke-width="1.5"/>
+                    <rect x="166" y="48" width="28" height="5" rx="2" fill="#94a3b8"/>
+                    <text x="180" y="86" fill="#93c5fd" font-size="7" font-weight="700" text-anchor="middle" font-family="monospace">HC-SR04</text>
+                    
+                    <circle cx="152" cy="68" r="14" fill="url(#metalTrans)" stroke="#cbd5e1" stroke-width="1.2"/>
+                    <circle cx="152" cy="68" r="11" fill="#1e293b"/>
+                    <circle cx="152" cy="68" r="8" fill="#0b0f14"/>
+                    <circle cx="150" cy="66" r="3" fill="#ffffff" opacity=".4"/>
+                    
+                    <circle cx="208" cy="68" r="14" fill="url(#metalTrans)" stroke="#cbd5e1" stroke-width="1.2"/>
+                    <circle cx="208" cy="68" r="11" fill="#1e293b"/>
+                    <circle cx="208" cy="68" r="8" fill="#0b0f14"/>
+                    <circle cx="206" cy="66" r="3" fill="#ffffff" opacity=".4"/>
+                  </g>
+                </g>
+
+                <path class="sim-sonar-beam" id="simBeam" d="M142 84 L218 84 L276 160 L84 160 Z" fill="url(#sonarCone)" pointer-events="none"/>
+
+                <ellipse cx="180" cy="126" rx="124" ry="10" fill="#0a0e0c"/>
+
+                <g id="trashDropLayer" pointer-events="none"></g>
+
+                <path d="M46 122 Q48 116 54 116 L306 116 Q312 116 314 122 L316 138 Q317 143 311 143 L49 143 Q43 143 44 138 Z" fill="url(#rimGrad)" stroke="#37473d" stroke-width="1.2"/>
+                <line x1="52" y1="120" x2="308" y2="120" stroke="#ffffff" stroke-opacity=".15" stroke-width="1.5"/>
+
+                <path d="M52 143 L68 466 Q70 480 84 482 L276 482 Q290 480 292 466 L308 143 Z" fill="url(#bin3dBody)" stroke="#303d35" stroke-width="1.2"/>
+                <path d="M56 146 L71 464" stroke="#ffffff" stroke-opacity=".08" stroke-width="3" fill="none"/>
+                <path d="M304 146 L289 464" stroke="#000000" stroke-opacity=".3" stroke-width="3" fill="none"/>
+
+                <g class="sim-recycle-badge" transform="translate(122, 316) scale(0.85)">
+                  <path d="M -20 12 L -34 -12 L -18 -12" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
+                  <path d="M -8 -30 L 12 -30 L 24 -10" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
+                  <path d="M 30 6 L 16 26 L -8 26" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
+                  <polygon points="-26,-6 -38,-14 -26,-22" fill="#ffffff" opacity=".92"/>
+                  <polygon points="14,-24 26,-32 18,-42" fill="#ffffff" opacity=".92"/>
+                  <polygon points="20,18 18,32 6,24" fill="#ffffff" opacity=".92"/>
+                </g>
+
+                <g class="sim-pill-window">
+                  <rect x="203" y="177" width="58" height="270" rx="29" ry="29" fill="none" stroke="url(#pillFrame)" stroke-width="3.5" filter="drop-shadow(0 2px 8px rgba(0,0,0,.5))"/>
+                  <rect x="206" y="180" width="52" height="264" rx="26" ry="26" fill="#0d1410" stroke="#1f2c24" stroke-width="1.5"/>
+
+                  <g clip-path="url(#pillClip)">
+                    
+                    <rect x="206" y="180" width="52" height="264" fill="#0d1410"/>
+
+                    <rect x="206" y="378" width="52" height="66" fill="#2EB85C" opacity=".14"/>
+                    <rect x="206" y="312" width="52" height="66" fill="#FFD60A" opacity=".14"/>
+                    <rect x="206" y="246" width="52" height="66" fill="#FF9500" opacity=".14"/>
+                    <rect x="206" y="180" width="52" height="66" fill="#E5383B" opacity=".14"/>
+
+                    <rect id="pillBarGreen"  x="206" y="444" width="52" height="0" fill="#2EB85C" opacity=".96" style="transition: y .6s cubic-bezier(.22,.8,.24,1), height .6s cubic-bezier(.22,.8,.24,1);"/>
+                    <rect id="pillBarYellow" x="206" y="378" width="52" height="0" fill="#FFD60A" opacity=".96" style="transition: y .6s cubic-bezier(.22,.8,.24,1), height .6s cubic-bezier(.22,.8,.24,1);"/>
+                    <rect id="pillBarOrange" x="206" y="312" width="52" height="0" fill="#FF9500" opacity=".96" style="transition: y .6s cubic-bezier(.22,.8,.24,1), height .6s cubic-bezier(.22,.8,.24,1);"/>
+                    <rect id="pillBarRed"    x="206" y="246" width="52" height="0" fill="#E5383B" opacity=".96" style="transition: y .6s cubic-bezier(.22,.8,.24,1), height .6s cubic-bezier(.22,.8,.24,1);"/>
+
+                    <line id="pillTopLine" x1="206" y1="444" x2="258" y2="444" stroke="#ffffff" stroke-width="2" opacity="0" style="transition: y1 .5s cubic-bezier(.22,.8,.24,1), y2 .5s cubic-bezier(.22,.8,.24,1), opacity .3s;"/>
+
+                    <rect x="210" y="180" width="7" height="264" fill="#ffffff" opacity=".22" rx="3.5" pointer-events="none"/>
+                  </g>
+
+                  <path d="M214 186 Q210 186 210 196 L210 428 Q210 436 214 438 Q216 438 216 428 L216 196 Q216 186 214 186 Z" fill="#ffffff" opacity=".2" pointer-events="none"/>
+                </g>
+
+                <g class="sim-scale-marks" font-family="var(--font-head)" font-size="10.5" font-weight="700">
+                  
+                  <line x1="264" y1="180" x2="275" y2="180" stroke="#ffffff" stroke-width="1.8" opacity=".6"/>
+                  <text x="280" y="184" fill="#94a3b8">100%</text>
+
+                  <line x1="264" y1="246" x2="274" y2="246" stroke="#ffffff" stroke-width="1.6" opacity=".5"/>
+                  <text x="280" y="250" fill="#94a3b8">75%</text>
+
+                  <line x1="264" y1="312" x2="274" y2="312" stroke="#ffffff" stroke-width="1.6" opacity=".5"/>
+                  <text x="280" y="316" fill="#94a3b8">50%</text>
+
+                  <line x1="264" y1="378" x2="274" y2="378" stroke="#ffffff" stroke-width="1.6" opacity=".5"/>
+                  <text x="280" y="382" fill="#94a3b8">25%</text>
+
+                  <line x1="264" y1="444" x2="275" y2="444" stroke="#ffffff" stroke-width="1.8" opacity=".6"/>
+                  <text x="280" y="448" fill="#94a3b8">0%</text>
+
+                  <g id="pillIndicatorGroup" style="transform: translateY(444px); transition: transform .6s cubic-bezier(.22,.8,.24,1);">
+                    <line x1="256" y1="0" x2="278" y2="0" id="pillIndLine" stroke="#2EB85C" stroke-width="2.5"/>
+                    <g transform="translate(280, -9)">
+                      <rect id="pillIndBadge" x="0" y="0" width="38" height="18" rx="5" fill="#0d1410" stroke="#2EB85C" stroke-width="1.5"/>
+                      <text id="pillIndText" x="19" y="13" text-anchor="middle" fill="#2EB85C" font-size="11" font-weight="800">0%</text>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+          <div class="sim-panel glass">
+            <div class="readout">
+              <div class="gauge-wrap">
+                <svg class="gauge" viewBox="0 0 120 120" aria-hidden="true">
+                  <defs><linearGradient id="gGrad" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0" stop-color="#2EB85C"/><stop offset=".4" stop-color="#FFD60A"/><stop offset=".75" stop-color="#FF9500"/><stop offset="1" stop-color="#E5383B"/>
+                  </linearGradient></defs>
+                  <circle cx="60" cy="60" r="52" class="g-track"/>
+                  <circle cx="60" cy="60" r="52" class="g-val" id="gaugeVal"/>
+                </svg>
+                <div class="gauge-text"><span id="pctText">0</span><small>%</small></div>
+              </div>
+              <div class="metrics">
+                <div class="metric"><span>Distância estimada</span><strong><span id="distText">30,0</span> cm</strong></div>
+                <div class="metric"><span>Status</span><strong class="status" id="statusText" data-state="0">Vazia ou quase vazia</strong></div>
+              </div>
+            </div>
+
+            <div class="bar" aria-hidden="true"><div class="bar-fill" id="barFill"></div></div>
+
+            <label class="slider-label" for="levelRange">Nível de preenchimento</label>
+            <input type="range" id="levelRange" min="0" max="100" value="0" step="1" aria-describedby="simNote">
+            <div class="slider-ticks" aria-hidden="true"><span>Vazia</span><span>Em uso</span><span>Ficando cheia</span><span>Cheia</span></div>
+
+            <div class="sim-buttons">
+              <button class="btn btn-small btn-accent" type="button" id="autoBtn" aria-pressed="false">Simular enchimento automático</button>
+            </div>
+
+            <details class="sim-details">
+              <summary>Como a distância é estimada?</summary>
+              <p>Na simulação, consideramos uma lixeira com 30 cm de profundidade e o sensor na parte superior. A distância é calculada por: profundidade × (1 − nível). Esse valor de 30 cm serve apenas de exemplo.</p>
+            </details>
+            <p class="fine-print" id="simNote">Esta é uma simulação para demonstrar o funcionamento do projeto. Os valores exibidos não vêm de uma lixeira conectada ao sistema.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="como-funciona">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Como funciona</p>
+          <h2>Como desenvolvemos a <span class="grad-text">ideia</span></h2>
+          <p>O funcionamento do protótipo é dividido em algumas etapas. Cada componente tem uma função importante para identificar o nível dos resíduos e mostrar essa informação por meio dos LEDs.</p>
+        </header>
+
+        <ol class="steps">
+          <li class="step reveal" style="--i:0">
+            <button class="step-card" type="button" aria-expanded="false">
+              <span class="step-num">01</span>
+              <span class="step-icon"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><use href="#sonar"/></svg></span>
+              <h3>Medição da distância</h3>
+              <p>O sensor HC-SR04 fica na parte superior da lixeira e mede a distância entre ele e os resíduos que estão dentro dela.</p>
+              <span class="step-more"><span>O sensor envia um som que não conseguimos ouvir e espera o eco voltar. Quanto mais tempo o eco demora, mais longe estão os resíduos. Como o som anda a cerca de 343 m/s, a conta é: distância (cm) = tempo (µs) × 0,0343 ÷ 2. Dividimos por 2 porque o som vai e volta.</span></span>
+              <span class="step-toggle" aria-hidden="true">+</span>
+            </button>
+          </li>
+          <li class="step reveal" style="--i:1">
+            <button class="step-card" type="button" aria-expanded="false">
+              <span class="step-num">02</span>
+              <span class="step-icon"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><use href="#chip"/></svg></span>
+              <h3>Leitura pelo Arduino</h3>
+              <p>O Arduino recebe a informação do sensor e utiliza essa medida para estimar quanto da lixeira já está ocupado.</p>
+              <span class="step-more"><span>A ideia é comparar a distância medida com a distância da lixeira vazia: quanto menor a distância, mais cheia a lixeira está. Depois, o resultado é encaixado em um dos níveis.</span></span>
+              <span class="step-toggle" aria-hidden="true">+</span>
+            </button>
+          </li>
+          <li class="step reveal" style="--i:2">
+            <button class="step-card" type="button" aria-expanded="false">
+              <span class="step-num">03</span>
+              <span class="step-icon"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><use href="#led"/></svg></span>
+              <h3>Indicação por LEDs</h3>
+              <p>De acordo com o nível identificado, os LEDs acendem para mostrar visualmente a situação da lixeira.</p>
+              <span class="step-more"><span>Cada nível tem um LED próprio. Assim, dá para saber como está a lixeira só de olhar, sem abrir a tampa.</span></span>
+              <span class="step-toggle" aria-hidden="true">+</span>
+            </button>
+          </li>
+          <li class="step reveal" style="--i:3">
+            <button class="step-card" type="button" aria-expanded="false">
+              <span class="step-num">04</span>
+              <span class="step-icon"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><use href="#truck"/></svg></span>
+              <h3>Identificação do nível</h3>
+              <p>Com essa sinalização, fica mais fácil perceber quando a lixeira ainda tem espaço ou quando já está próxima de ficar cheia.</p>
+              <span class="step-more"><span>Quando o LED do nível crítico acende, é sinal de que está na hora de esvaziar a lixeira.</span></span>
+              <span class="step-toggle" aria-hidden="true">+</span>
+            </button>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="sinalizacao">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Indicadores luminosos</p>
+          <h2>Entenda os <span class="grad-text">sinais</span> da lixeira</h2>
+          <p>Os LEDs permitem identificar visualmente o nível de preenchimento sem precisar abrir a lixeira para conferir.</p>
+        </header>
+
+        <div class="states" id="states">
+          <article class="state reveal" tabindex="0" data-state="0" style="--c:#2EB85C">
+            <span class="state-led"></span>
+            <h3>Nível baixo</h3><p class="range"><span class="range-min">0</span> – <span class="range-val" data-from="0" data-to="25">25</span>%*</p>
+            <p>Ainda há bastante espaço disponível.</p>
+            <span class="tag">Verde</span>
+          </article>
+          <article class="state reveal" tabindex="0" data-state="1" style="--c:#FFD60A">
+            <span class="state-led"></span>
+            <h3>Nível intermediário</h3><p class="range"><span class="range-min">25</span> – <span class="range-val" data-from="25" data-to="50">50</span>%*</p>
+            <p>A lixeira está sendo utilizada normalmente.</p>
+            <span class="tag">Amarelo</span>
+          </article>
+          <article class="state reveal" tabindex="0" data-state="2" style="--c:#FF9500">
+            <span class="state-led"></span>
+            <h3>Nível elevado</h3><p class="range"><span class="range-min">50</span> – <span class="range-val" data-from="50" data-to="75">75</span>%*</p>
+            <p>O espaço está diminuindo e merece atenção.</p>
+            <span class="tag">Laranja</span>
+          </article>
+          <article class="state reveal" tabindex="0" data-state="3" style="--c:#E5383B">
+            <span class="state-led"></span>
+            <h3>Nível crítico</h3><p class="range"><span class="range-min">75</span> – <span class="range-val" data-from="75" data-to="100">100</span>%*</p>
+            <p>A lixeira está próxima da capacidade máxima.</p>
+            <span class="tag">Vermelho</span>
+          </article>
+        </div>
+        <p class="fine-print reveal">* Faixas ilustrativas, ainda não confirmadas com o código Arduino do grupo.</p>
+      </div>
+    </section>
+
+    <section class="section" id="componentes">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Componentes</p>
+          <h2>O que usamos no <span class="grad-text">protótipo</span></h2>
+          <p>Para colocar a ideia em prática, utilizamos componentes simples que trabalham juntos para medir o nível dos resíduos e indicar o resultado.</p>
+        </header>
+
+        <div class="parts">
+          <article class="part reveal" tabindex="0">
+            <div class="part-art">
+              <svg viewBox="0 0 160 110" aria-hidden="true">
+                <rect x="14" y="14" width="132" height="82" rx="8" fill="#0f6b66" stroke="#3b9c97"/>
+                <rect x="22" y="30" width="30" height="30" rx="3" fill="#b8c2bd"/><rect x="26" y="34" width="22" height="22" rx="2" fill="#8d9a94"/>
+                <rect x="70" y="40" width="42" height="26" rx="3" fill="#1a1f1d"/>
+                <g fill="#d9dfdb"><rect x="74" y="34" width="2" height="6"/><rect x="82" y="34" width="2" height="6"/><rect x="90" y="34" width="2" height="6"/><rect x="98" y="34" width="2" height="6"/><rect x="106" y="34" width="2" height="6"/><rect x="74" y="66" width="2" height="6"/><rect x="82" y="66" width="2" height="6"/><rect x="90" y="66" width="2" height="6"/><rect x="98" y="66" width="2" height="6"/><rect x="106" y="66" width="2" height="6"/></g>
+                <g fill="#C2DD6C"><circle cx="124" cy="26" r="3"/><circle cx="134" cy="26" r="3" fill="#79CE67"/></g>
+                <g fill="#e8d28a"><rect x="30" y="86" width="3" height="10"/><rect x="38" y="86" width="3" height="10"/><rect x="46" y="86" width="3" height="10"/><rect x="54" y="86" width="3" height="10"/><rect x="62" y="86" width="3" height="10"/></g>
+              </svg>
+            </div>
+            <h3>Arduino</h3><p>É responsável por receber as informações do sensor, processar as medidas e controlar os LEDs.</p>
+            <p class="part-more">É uma placa programável: o código do projeto roda nela.</p>
+          </article>
+          <article class="part reveal" tabindex="0">
+            <div class="part-art">
+              <svg viewBox="0 0 160 110" aria-hidden="true">
+                <rect x="12" y="22" width="136" height="66" rx="6" fill="#1561a8" stroke="#3b8ad0"/>
+                <circle cx="52" cy="55" r="22" fill="#c9d1d6" stroke="#8f9ba3" stroke-width="2"/><circle cx="52" cy="55" r="15" fill="#2b3135"/><circle cx="52" cy="55" r="7" fill="#444c52"/>
+                <circle cx="108" cy="55" r="22" fill="#c9d1d6" stroke="#8f9ba3" stroke-width="2"/><circle cx="108" cy="55" r="15" fill="#2b3135"/><circle cx="108" cy="55" r="7" fill="#444c52"/>
+                <rect x="70" y="46" width="20" height="18" rx="2" fill="#d6dce0"/>
+                <g fill="#e8d28a"><rect x="48" y="88" width="3" height="12"/><rect x="60" y="88" width="3" height="12"/><rect x="72" y="88" width="3" height="12"/><rect x="84" y="88" width="3" height="12"/></g>
+              </svg>
+            </div>
+            <h3>Sensor ultrassônico HC-SR04</h3><p>Mede a distância entre o sensor e os resíduos dentro da lixeira.</p>
+            <p class="part-more">Um dos “olhos” emite o som e o outro recebe o eco.</p>
+          </article>
+          <article class="part reveal" tabindex="0">
+            <div class="part-art">
+              <svg viewBox="0 0 160 110" aria-hidden="true">
+                <g transform="translate(10 10) scale(0.8)">
+                  
+                  <g transform="translate(0 0)"><path d="M12 62 V38 a18 18 0 0 1 36 0 V62 Z" fill="#2EB85C" opacity=".9"/><rect x="6" y="62" width="48" height="6" rx="2" fill="#1f8a43"/><rect x="20" y="68" width="2" height="26" fill="#cfd5d2"/><rect x="38" y="68" width="2" height="22" fill="#cfd5d2"/></g>
+                  
+                  <g transform="translate(38 0)"><path d="M12 62 V38 a18 18 0 0 1 36 0 V62 Z" fill="#FFD60A" opacity=".9"/><rect x="6" y="62" width="48" height="6" rx="2" fill="#c9a600"/><rect x="20" y="68" width="2" height="26" fill="#cfd5d2"/><rect x="38" y="68" width="2" height="22" fill="#cfd5d2"/></g>
+                  
+                  <g transform="translate(76 0)"><path d="M12 62 V38 a18 18 0 0 1 36 0 V62 Z" fill="#FF9500" opacity=".9"/><rect x="6" y="62" width="48" height="6" rx="2" fill="#c97200"/><rect x="20" y="68" width="2" height="26" fill="#cfd5d2"/><rect x="38" y="68" width="2" height="22" fill="#cfd5d2"/></g>
+                  
+                  <g transform="translate(114 0)"><path d="M12 62 V38 a18 18 0 0 1 36 0 V62 Z" fill="#E5383B" opacity=".9"/><rect x="6" y="62" width="48" height="6" rx="2" fill="#a8262a"/><rect x="20" y="68" width="2" height="26" fill="#cfd5d2"/><rect x="38" y="68" width="2" height="22" fill="#cfd5d2"/></g>
+                </g>
+              </svg>
+            </div>
+            <h3>LEDs indicadores</h3><p>Mostram visualmente o nível de preenchimento identificado pelo sistema.</p>
+            <p class="part-more">São quatro LEDs, um para cada nível.</p>
+          </article>
+          <article class="part reveal" tabindex="0">
+            <div class="part-art">
+              <svg viewBox="0 0 160 110" aria-hidden="true">
+                <rect x="38" y="20" width="84" height="12" rx="5" fill="#4a6b59"/><rect x="68" y="12" width="24" height="9" rx="4" fill="#3a5246"/>
+                <path d="M42 34 H118 L112 98 Q111 102 107 102 H53 Q49 102 48 98 Z" fill="#26382f" stroke="#5c7a69" stroke-width="1.5"/>
+                <g fill="none" stroke="#C2DD6C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M72 76 L66 66 L73 66"/><path d="M77 56 L85 56 L90 64"/><path d="M92 72 L86 82 L77 82"/></g>
+              </svg>
+            </div>
+            <h3>Estrutura da lixeira</h3><p>É onde os componentes são instalados e onde ocorre a medição dos resíduos.</p>
+            <p class="part-more">O sensor fica na parte superior, voltado para dentro.</p>
+          </article>
+          <article class="part reveal" tabindex="0">
+            <div class="part-art">
+              <svg viewBox="0 0 160 110" aria-hidden="true">
+                <g fill="none" stroke-width="5" stroke-linecap="round">
+                  <path d="M20 90 C50 90 40 30 80 30 S110 90 140 90" stroke="#30B155"/>
+                  <path d="M20 70 C60 70 50 20 90 24 S120 70 140 60" stroke="#C2DD6C"/>
+                  <path d="M20 50 C40 50 60 86 90 80 S120 40 140 40" stroke="#FFE3B3"/>
+                </g>
+                <g fill="#cfd5d2"><rect x="12" y="84" width="10" height="12" rx="2"/><rect x="12" y="64" width="10" height="12" rx="2"/><rect x="12" y="44" width="10" height="12" rx="2"/><rect x="138" y="84" width="10" height="12" rx="2"/><rect x="138" y="54" width="10" height="12" rx="2"/><rect x="138" y="34" width="10" height="12" rx="2"/></g>
+              </svg>
+            </div>
+            <h3>Jumpers e conexões</h3><p>Permitem conectar os componentes eletrônicos ao Arduino.</p>
+            <p class="part-more">São os fios que levam energia e sinais entre as peças.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="grupo">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Integrantes</p>
+          <h2>Quem está por trás do <span class="grad-text">projeto</span></h2>
+          <p>Este projeto faz parte da nossa jornada acadêmica e foi desenvolvido para colocar em prática conhecimentos de tecnologia, programação e automação.</p>
+        </header>
+        <div class="team" id="teamGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="contato">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Contato &amp; Parcerias</p>
+          <h2>Fale com a nossa <span class="grad-text">equipe</span></h2>
+          <p>Tem interesse em saber mais sobre o Smart Coletor ou implementar em seu condomínio ou empresa? Preencha seus dados abaixo e entraremos em contato.</p>
+        </header>
+
+        <div class="contact-card glass reveal">
+          <div class="contact-side">
+            <div class="contact-side-header">
+              <span class="contact-tag">Fale Conosco</span>
+              <h3>Vamos conversar sobre automação sustentável?</h3>
+              <p>Envie sua mensagem ou solicitação. Nossa equipe entrará em contato para tirar dúvidas e apresentar mais detalhes do projeto.</p>
+            </div>
+
+            <ul class="contact-highlights">
+              <li>
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Retorno Rápido</strong>
+                  <span>Nossa equipe responderá sua solicitação em até 24 horas úteis.</span>
+                </div>
+              </li>
+              <li>
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Preenchimento Inteligente</strong>
+                  <span>Digite o CEP para localizar rua, bairro e cidade instantaneamente.</span>
+                </div>
+              </li>
+            </ul>
+
+            <div class="contact-meta">
+              <span class="meta-label">Projeto Integrador UNINOVE</span>
+              <p>São Paulo — SP &bull; Brasil</p>
+              <div class="meta-status">
+                <span class="status-dot"></span> Atendimento disponível
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-main">
+            <form id="contactForm" class="contact-form" novalidate autocomplete="on">
+              <div class="form-row-grid form-grid-2">
+                <div class="form-group">
+                  <label for="contatoNome">Nome <span class="req">*</span></label>
+                  <input type="text" id="contatoNome" name="nome" placeholder="Ex: Lucas" required>
+                  <span class="field-error" id="err-nome"></span>
+                </div>
+                <div class="form-group">
+                  <label for="contatoSobrenome">Sobrenome <span class="req">*</span></label>
+                  <input type="text" id="contatoSobrenome" name="sobrenome" placeholder="Ex: Sales" required>
+                  <span class="field-error" id="err-sobrenome"></span>
+                </div>
+              </div>
+
+              <div class="form-row-grid form-grid-2">
+                <div class="form-group">
+                  <label for="contatoEmail">E-mail <span class="req">*</span></label>
+                  <input type="email" id="contatoEmail" name="email" placeholder="seuemail@exemplo.com" required>
+                  <span class="field-error" id="err-email"></span>
+                </div>
+                <div class="form-group">
+                  <label for="contatoTelefone">Telefone / WhatsApp</label>
+                  <input type="tel" id="contatoTelefone" name="telefone" placeholder="(11) 98765-4321">
+                </div>
+              </div>
+
+              <div class="form-divider-line">
+                <span>Endereço Residencial / Comercial</span>
+              </div>
+
+              <div class="form-row-grid form-grid-cep">
+                <div class="form-group">
+                  <label for="contatoCep">CEP <span class="req">*</span></label>
+                  <div class="input-with-spinner">
+                    <input type="text" id="contatoCep" name="cep" placeholder="00000-000" maxlength="9" required>
+                    <span class="cep-spinner" id="cepSpinner" aria-hidden="true"></span>
+                  </div>
+                  <span class="field-hint" id="cepStatus">Digite o CEP para buscar o endereço automaticamente</span>
+                  <span class="field-error" id="err-cep"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="contatoNumero">Número <span class="req">*</span></label>
+                  <input type="text" id="contatoNumero" name="numero" placeholder="Ex: 450" required>
+                  <span class="field-hint">Deixe para digitar o nº da residência</span>
+                  <span class="field-error" id="err-numero"></span>
+                </div>
+              </div>
+
+              <div class="form-row-grid form-grid-rua">
+                <div class="form-group grid-rua-item">
+                  <label for="contatoRua">Rua / Logradouro <span class="req">*</span></label>
+                  <input type="text" id="contatoRua" name="rua" placeholder="Preenchido automaticamente pelo CEP" required>
+                  <span class="field-error" id="err-rua"></span>
+                </div>
+                <div class="form-group">
+                  <label for="contatoComplemento">Complemento</label>
+                  <input type="text" id="contatoComplemento" name="complemento" placeholder="Apto, Bloco, etc.">
+                </div>
+              </div>
+
+              <div class="form-row-grid form-grid-loc">
+                <div class="form-group">
+                  <label for="contatoBairro">Bairro <span class="req">*</span></label>
+                  <input type="text" id="contatoBairro" name="bairro" placeholder="Preenchido pelo CEP" required>
+                  <span class="field-error" id="err-bairro"></span>
+                </div>
+                <div class="form-group">
+                  <label for="contatoCidade">Cidade <span class="req">*</span></label>
+                  <input type="text" id="contatoCidade" name="cidade" placeholder="Preenchido pelo CEP" required>
+                  <span class="field-error" id="err-cidade"></span>
+                </div>
+                <div class="form-group grid-uf-item">
+                  <label for="contatoUf">UF <span class="req">*</span></label>
+                  <input type="text" id="contatoUf" name="uf" placeholder="SP" maxlength="2" required>
+                  <span class="field-error" id="err-uf"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="contatoMensagem">Mensagem / Observações</label>
+                <textarea id="contatoMensagem" name="mensagem" rows="3" placeholder="Escreva sua mensagem ou dúvida sobre o Smart Coletor..."></textarea>
+              </div>
+
+              <div class="form-footer-actions">
+                <button type="submit" class="btn btn-primary btn-submit-lead" id="btnSubmitContact">
+                  <span class="btn-text">Enviar dados de contato</span>
+                  <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+
+              <div class="contact-status-box" id="contactStatusBox" role="alert" aria-live="polite" hidden></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assistente">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow"><span class="dot"></span> Assistente</p>
+          <h2>Ficou com alguma <span class="grad-text">dúvida?</span></h2>
+          <p>Nosso assistente pode ajudar você a entender melhor como a lixeira funciona, quais componentes utilizamos e qual é a proposta do projeto.</p>
+        </header>
+
+        <div class="chat glass reveal">
+          <div class="chat-top">
+            <span class="avatar"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><use href="#bot"/></svg></span>
+            <div><strong>Assistente da Lixeira Inteligente</strong><small>Respostas de uma base de conhecimento local, sem IA externa</small></div>
+          </div>
+          <div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
+          <div class="chips" id="chips"></div>
+          <form class="chat-form" id="chatForm" autocomplete="off">
+            <label class="sr-only" for="chatInput">Digite sua pergunta</label>
+            <input type="text" id="chatInput" placeholder="Digite sua pergunta sobre o projeto…" maxlength="200">
+            <button type="submit" class="send" id="chatSend" aria-label="Enviar pergunta">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="#send"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="section closing" id="encerramento">
+      <div class="container">
+        <div class="closing-card reveal">
+          <svg viewBox="0 0 32 32" width="56" height="56" aria-hidden="true"><use href="#logo"/></svg>
+          <h2>Tecnologia aplicada a uma <span class="grad-text">ideia do dia a dia.</span></h2>
+          <p>Com este projeto, exploramos como sensores, programação e eletrônica podem trabalhar juntos para identificar o nível de resíduos de uma lixeira. Mais do que montar um protótipo, buscamos entender como a automação pode ser aplicada a situações reais.</p>
+          <a href="#inicio" class="btn btn-primary" id="btnVoltarInicio">Voltar ao início</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="#inicio" class="brand"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><use href="#logo"/></svg><span>Lixeira <b>Inteligente</b></span></a>
+        <p class="footer-small">Projeto universitário de automação com Arduino.</p>
+      </div>
+      <dl class="credits">
+        <div><dt>Integrantes</dt><dd class="todo" id="fMembers">Lucas Sales<br>Iris Guimarães<br>Rafaella Alcasser<br>Ana Clara<br>Rafaella Barroso</dd></div>
+        <div><dt>Curso</dt><dd class="todo" id="fCourse">Análise e Desenvolvimento de Sistemas</dd></div>
+        <div><dt>Instituição</dt><dd class="todo" id="fInst">Nove de Julho (UNINOVE)</dd></div>
+        <div><dt>Disciplina </dt><dd class="todo" id="fSubject">Projeto Integrador</dd></div>
+        <div><dt>Professor</dt><dd class="todo" id="fYear">Hebert Bratefixe Alquimim</dd></div>
+        <div><dt>Ano</dt><dd class="todo" id="fYear">2º Semestre/2026</dd></div>
+      </dl>
+    </div>
+  </footer>
+
+  <button class="to-top" id="toTop" aria-label="Voltar ao topo" hidden>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><use href="#arrow-up"/></svg>
+  </button>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/knowledge.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/contact.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
