@@ -1,0 +1,46 @@
+const byte PINO_SENSOR = 2;
+const float DISTANCIA_VAZIA_CM = 120.0;
+const float DISTANCIA_CHEIA_CM = 10.0;
+const byte TOTAL_LEDS = 4;
+const byte PINOS_LEDS[TOTAL_LEDS] = {3, 4, 5, 6};
+const int LIMITES_LEDS[TOTAL_LEDS] = {25, 50, 75, 90};
+void setup() {
+  Serial.begin(9600);
+  for (byte i = 0; i < TOTAL_LEDS; i++) {
+    pinMode(PINOS_LEDS[i], OUTPUT);
+  }
+}
+void loop() {
+  pinMode(PINO_SENSOR, OUTPUT);
+  digitalWrite(PINO_SENSOR, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PINO_SENSOR, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(PINO_SENSOR, LOW);
+  pinMode(PINO_SENSOR, INPUT);
+  unsigned long duracao = pulseIn(PINO_SENSOR, HIGH, 30000UL);
+  if (duracao == 0) {
+    for (byte i = 0; i < TOTAL_LEDS; i++) {
+      digitalWrite(PINOS_LEDS[i], LOW);
+    }
+    Serial.println("Sem leitura do sensor");
+    delay(100);
+    return;
+  }
+  float distanciaCm = duracao / 100.0 / 2.0;
+  float percentual = (DISTANCIA_VAZIA_CM - distanciaCm) * 100.0 / (DISTANCIA_VAZIA_CM - DISTANCIA_CHEIA_CM);
+  percentual = constrain(percentual, 0.0, 100.0);
+  int nivel = (int)percentual;
+  for (byte i = 0; i < TOTAL_LEDS; i++) {
+    digitalWrite(PINOS_LEDS[i], nivel >= LIMITES_LEDS[i] ? HIGH : LOW);
+  }
+  const char* estado = nivel >= 85 ? "CHEIA" : nivel >= 60 ? "ATENCAO" : "NORMAL";
+  Serial.print("Distancia: ");
+  Serial.print(distanciaCm, 2);
+  Serial.print(" cm | Nivel: ");
+  Serial.print(nivel);
+  Serial.print("% | Estado: ");
+  Serial.println(estado);
+ 
+  delay(100);
+}
